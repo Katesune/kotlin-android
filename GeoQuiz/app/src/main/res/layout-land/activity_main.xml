@@ -23,13 +23,17 @@
             android:id="@+id/true_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/true_button" />
+            android:text="@string/true_button"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="10dp" />
 
         <Button
             android:id="@+id/false_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/false_button" />
+            android:text="@string/false_button"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="10dp" />
 
     </LinearLayout>
 
@@ -40,13 +44,32 @@
         android:layout_gravity="bottom|center_horizontal"
         android:text="@string/cheat_button" />
 
-    <ImageButton
-        android:id="@+id/next_button"
+    <TextView
+        android:id="@+id/cheat_counter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:text="@string/next_button"
-        android:src="@drawable/arrow_right" />
+        tools:text="@string/initial_cheats_count" />
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <ImageButton
+            android:id="@+id/prev_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:contentDescription="@string/prev_button"
+            android:src="@drawable/arrow_left" />
+
+        <ImageButton
+            android:id="@+id/next_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:contentDescription="@string/next_button"
+            android:src="@drawable/arrow_right" />
+
+    </FrameLayout>
 
 </FrameLayout>

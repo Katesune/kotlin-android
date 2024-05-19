@@ -10,6 +10,7 @@
 
     <string name="true_button">True</string>
     <string name="false_button">False</string>
+    <string name="prev_button">Previous</string>
     <string name="next_button">Next</string>
     <string name="correct_toast">Correct</string>
     <string name="incorrect_toast">Incorrect</string>
@@ -17,4 +18,6 @@
     <string name="show_answer_button">Show answer</string>
     <string name="cheat_button">Cheat!</string>
     <string name="judgement_toast">Cheating is wrong.</string>
+
+    <string name="initial_cheats_count">3</string>
 </resources>
