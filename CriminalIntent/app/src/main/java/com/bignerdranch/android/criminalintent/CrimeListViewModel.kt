@@ -1,6 +1,7 @@
 package com.bignerdranch.android.criminalintent
 
 import androidx.lifecycle.ViewModel
+import kotlin.random.Random
 
 class CrimeListViewModel: ViewModel() {
 
@@ -8,9 +9,11 @@ class CrimeListViewModel: ViewModel() {
 
     init {
         for (i in 0 until 100) {
+            val randomRequiredPolice = Random.nextInt(0,10)
             val crime = Crime()
             crime.title = "Crime #$i"
             crime.isSolved = i % 2 == 0
+            if (randomRequiredPolice > 6) crime.requiredPolice = R.layout.list_item_crime_police
             crimes += crime
         }
     }

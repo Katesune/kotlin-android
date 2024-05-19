@@ -62,7 +62,7 @@ class CrimeListFragment: Fragment() {
             itemView.setOnClickListener(this)
         }
 
-        fun bind(crime:Crime) {
+        fun bind(crime: Crime) {
             this.crime = crime
             titleTextView.text = this.crime.title
             dateTextView.text = this.crime.date.toString()
@@ -77,9 +77,13 @@ class CrimeListFragment: Fragment() {
     private inner class CrimeAdapter(var crimes: List<Crime>)
         : RecyclerView.Adapter<CrimeHolder>() {
 
+        override fun getItemViewType(position: Int): Int {
+            return crimes[position].requiredPolice
+        }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
         : CrimeHolder {
-            val view = layoutInflater.inflate(R.layout.list_item_crime, parent, false)
+            val view = layoutInflater.inflate(viewType, parent, false)
             return CrimeHolder(view)
         }
 
