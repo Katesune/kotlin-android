@@ -10,13 +10,14 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import java.util.*
+import java.util.UUID
 
 private const val TAG = "CrimeListFragment"
 
@@ -27,11 +28,18 @@ class CrimeListFragment: Fragment() {
     }
 
     private var callbacks: Callbacks? = null
+    private lateinit var crimes: List<Crime>
     private lateinit var crimeRecyclerView: RecyclerView
-    private var adapter: CrimeAdapter? = CrimeAdapter((emptyList()))
+    private var adapter: CrimeAdapter? = CrimeAdapter()
 
     private val crimeListViewModel: CrimeListViewModel by lazy {
         ViewModelProviders.of(this).get(CrimeListViewModel::class.java)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        crimes = emptyList()
+        crimeListViewModel.loadCrimes(crimes)
     }
 
     override fun onAttach(context: Context) {
@@ -62,7 +70,8 @@ class CrimeListFragment: Fragment() {
             Observer { crimes ->
                 crimes?.let {
                     Log.i(TAG, "Got crimes ${crimes.size}")
-                    updateUI(crimes)
+                    this.crimes = crimes
+                    adapter?.submitList(crimes.toMutableList())
                 }
             }
         )
@@ -71,11 +80,6 @@ class CrimeListFragment: Fragment() {
     override fun onDetach() {
         super.onDetach()
         callbacks = null
-    }
-
-    private fun updateUI(crimes: List<Crime>) {
-        adapter = CrimeAdapter(crimes)
-        crimeRecyclerView.adapter = adapter
     }
 
     private inner class CrimeHolder(view: View)
@@ -110,8 +114,8 @@ class CrimeListFragment: Fragment() {
         }
     }
 
-    private inner class CrimeAdapter(var crimes: List<Crime>)
-        : RecyclerView.Adapter<CrimeHolder>() {
+    private inner class CrimeAdapter()
+        : ListAdapter<Crime, CrimeHolder>(CrimeCallback()) {
 
         override fun getItemViewType(position: Int): Int {
             return R.layout.list_item_crime
@@ -130,6 +134,16 @@ class CrimeListFragment: Fragment() {
             val crime = crimes[position]
             holder.bind(crime)
         }
+    }
+
+    private inner class CrimeCallback
+        : DiffUtil.ItemCallback<Crime>() {
+
+        override fun areItemsTheSame(oldItem: Crime, newItem: Crime): Boolean =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: Crime, newItem: Crime): Boolean =
+            oldItem == newItem
     }
 
     companion object {
