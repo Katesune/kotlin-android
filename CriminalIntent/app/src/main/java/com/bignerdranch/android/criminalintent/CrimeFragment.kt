@@ -149,7 +149,7 @@ class CrimeFragment: Fragment(), DatePickerFragment.Callbacks, TimePickerFragmen
     }
 
     val timeConverted: () -> String = {
-        DateFormat.format("hh mm", crime.date).toString()
+        DateFormat.format("HH mm", crime.date).toString()
     }
 
 

@@ -20,4 +20,8 @@ class CrimeListViewModel: ViewModel() {
     fun loadCrimes(crimes: List<Crime>) {
         crimeLiveData.value = crimes
     }
+
+    fun addCrime(crime: Crime) {
+        crimeRepository.addCrime(crime)
+    }
 }
