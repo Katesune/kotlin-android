@@ -21,4 +21,10 @@
     <string name="send_report">Send crime report via</string>
     <string name="crime_report_call_text">Call the suspect</string>
     <string name="no_suspend_for_call">There is no suspect to call</string>
+    <string name="crime_photo_button_description">Take photo of crime scene</string>
+    <string name="crime_photo_no_image_description">Crime scene photo (not set)</string>
+    <string name="crime_photo_image_description">Crime scene photo (set)</string>
+    <string name="crime_list_title_description">The crime consists in</string>
+    <string name="date_description">Date</string>
+    <string name="time_description">Time</string>
 </resources>

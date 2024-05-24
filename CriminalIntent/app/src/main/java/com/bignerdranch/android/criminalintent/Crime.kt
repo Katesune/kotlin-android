@@ -12,7 +12,7 @@ data class Crime(@PrimaryKey val id: UUID = UUID.randomUUID(),
                  var isSolved: Boolean = false,
                  var suspect: String = "",
                  @LayoutRes var requiredPolice: Int  = R.layout.list_item_crime
-)
-//{
-//    @LayoutRes var requiredPolice: Int  = R.layout.list_item_crime
-//}
+) {
+    val photoFileName
+        get() = "IMG_$id.jpg"
+}

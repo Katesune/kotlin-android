@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import java.util.UUID
+import java.util.*
 
 private const val TAG = "CrimeListFragment"
 
@@ -171,8 +171,23 @@ class CrimeListFragment: Fragment() {
 
         override fun onBindViewHolder(holder: CrimeHolder, position: Int) {
             val crime = crimes[position]
+            view?.addRowDescription(crime)
             holder.bind(crime)
         }
+    }
+
+    fun View.addRowDescription(crime: Crime) {
+        val titleDescription = getString(R.string.crime_list_title_description) + crime.title
+        val dateDescription = getString(R.string.crime_date) + dateDescription(crime.date)
+        val solvedDescription =
+            if (crime.isSolved) getString(R.string.crime_report_solved)
+            else getString(R.string.crime_report_unsolved)
+
+        this.contentDescription = titleDescription + dateDescription + solvedDescription
+    }
+
+    val dateDescription: (Date) -> String = { date ->
+        DateFormat.format("EEEE, MMMM dd, yyyy HH mm", date).toString()
     }
 
     private inner class CrimeCallback

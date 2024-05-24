@@ -14,35 +14,37 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import java.util.*
 import androidx.lifecycle.Observer
-
+import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.Manifest
-import android.app.SearchManager
-import android.content.ContentUris
-import android.content.UriMatcher
-import java.lang.invoke.ConstantCallSite
-import javax.sql.CommonDataSource
+import android.provider.MediaStore
+import android.widget.*
+import androidx.core.content.FileProvider
+import java.io.File
+
 
 private const val TAG = "CrimeFragment"
 private const val ARG_CRIME_ID = "crime_id"
 private const val DIALOG_DATE = "DialogDate"
 private const val DIALOG_TIME = "DialogTime"
+private const val DIALOG_ENLARGED_PHOTO = "DialogPhoto"
 private const val REQUEST_DATE = 0
 private const val REQUEST_TIME = 1
 private const val REQUEST_CONTACT = 1
 private const val REQUEST_PHONE_NUMBER = 2
+private const val REQUEST_PHOTO = 3
 private const val DATE_FORMAT = "EEE, MMM, dd"
 
 class CrimeFragment: Fragment(),
         DatePickerFragment.Callbacks, TimePickerFragment.Callbacks {
 
     private lateinit var crime: Crime
+    private lateinit var photoFile: File
+    private lateinit var photoUri: Uri
+
     private lateinit var titleField:EditText
     private lateinit var dateButton: Button
     private lateinit var timeButton: Button
@@ -50,6 +52,8 @@ class CrimeFragment: Fragment(),
     private lateinit var reportButton: Button
     private lateinit var suspectButton: Button
     private lateinit var suspectCallButton: Button
+    private lateinit var photoButton: ImageButton
+    private lateinit var photoView: ImageView
 
     private val crimeDetailViewModel: CrimeDetailViewModel by lazy {
         ViewModelProviders.of(this).get(CrimeDetailViewModel::class.java)
@@ -76,9 +80,22 @@ class CrimeFragment: Fragment(),
         reportButton = view.findViewById(R.id.crime_report) as Button
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
         suspectCallButton = view.findViewById(R.id.crime_suspect_call) as Button
+        photoButton = view.findViewById(R.id.crime_camera) as ImageButton
+        photoView = view.findViewById(R.id.crime_photo) as ImageView
+
+        photoView.viewTreeObserver.addOnGlobalLayoutListener(PhotoObserver())
 
         return view
     }
+
+    inner class PhotoObserver: OnGlobalLayoutListener {
+        override fun onGlobalLayout() {
+            if (photoView.isActivated) {
+                updatePhotoView()
+            }
+        }
+    }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -87,6 +104,12 @@ class CrimeFragment: Fragment(),
             Observer { crime ->
                 crime?.let {
                     this.crime = crime
+                    photoFile = crimeDetailViewModel.getPhotoFile(crime)
+                    photoUri = FileProvider.getUriForFile(
+                            requireActivity(),
+                            "com.bignerdranch.android.criminalintent.fileprovider",
+                            photoFile
+                    )
                     updateUI()
                 }
             })
@@ -187,7 +210,49 @@ class CrimeFragment: Fragment(),
                 }
 
             }
+        }
 
+        photoButton.apply {
+            val packageManager: PackageManager = requireActivity().packageManager
+
+            val captureImage = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val resolvedActivity: ResolveInfo? =
+                    packageManager.resolveActivity(
+                            captureImage,
+                            PackageManager.MATCH_DEFAULT_ONLY)
+
+            if (resolvedActivity == null) isEnabled = false
+
+            setOnClickListener {
+                Log.d(TAG, "image")
+                captureImage.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
+
+                val cameraActivities: List<ResolveInfo> =
+                        packageManager.queryIntentActivities(
+                                captureImage,
+                                PackageManager.MATCH_DEFAULT_ONLY)
+
+                for (cameraActivity in cameraActivities) {
+                    requireActivity().grantUriPermission(
+                            cameraActivity.activityInfo.packageName,
+                            photoUri,
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                }
+
+                startActivityForResult(captureImage, REQUEST_PHOTO)
+            }
+        }
+
+        photoView.apply {
+            setOnClickListener {
+                if (!photoFile.exists()) isEnabled = false
+
+                EnlargedPhotoFragment.newInstance(photoFile.path).apply {
+                    show(this@CrimeFragment.requireFragmentManager(), DIALOG_ENLARGED_PHOTO)
+                }
+
+            }
         }
 
     }
@@ -212,6 +277,14 @@ class CrimeFragment: Fragment(),
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 ContactsContract.CommonDataKinds.Phone.NUMBER,
                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = '$suspectId'"
+        )
+    }
+
+    override fun onDetach() {
+        super.onDetach()
+        requireActivity().revokeUriPermission(
+                photoUri,
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         )
     }
 
@@ -240,7 +313,18 @@ class CrimeFragment: Fragment(),
         }
         if (crime.suspect.isNotEmpty()) {
             suspectButton.text = crime.suspect
-            suspectCallButton.text = getString(R.string.crime_report_call_text)
+        }
+        updatePhotoView()
+    }
+
+    private fun updatePhotoView() {
+        if (photoFile.exists()) {
+            val bitmap = getScaledBitmap(photoFile.path, requireActivity())
+            photoView.setImageBitmap(bitmap)
+            photoView.contentDescription = getString(R.string.crime_photo_image_description)
+        } else {
+            photoButton.setImageDrawable(null)
+            photoView.contentDescription = getString(R.string.crime_photo_no_image_description)
         }
     }
 
@@ -269,6 +353,19 @@ class CrimeFragment: Fragment(),
                     crimeDetailViewModel.saveCrime(crime)
                     suspectButton.text = suspect
                 }
+            }
+
+            requestCode == REQUEST_PHONE_NUMBER -> {
+                if (crime.suspect.isEmpty()) suspectCallButton.text = getString(R.string.no_suspend_for_call)
+                else suspectCallButton.text = getString(R.string.crime_report_call_text)
+            }
+
+            requestCode == REQUEST_PHOTO -> {
+                requireActivity().revokeUriPermission(
+                        photoUri,
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                updatePhotoView()
             }
         }
     }
