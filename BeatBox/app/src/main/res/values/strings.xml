@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BeatBox</string>
+    <string name="initial_play_speed">Playback Speed 0 %</string>
+    <string name="play_speed">Playback Speed %1$s</string>
+</resources>
