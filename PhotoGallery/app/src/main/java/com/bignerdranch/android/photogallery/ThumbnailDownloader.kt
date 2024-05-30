@@ -2,14 +2,14 @@ package com.bignerdranch.android.photogallery
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.hardware.biometrics.BiometricManager
 import android.os.Binder
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
 import android.util.Log
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import android.util.LruCache
+import androidx.lifecycle.*
 import java.util.concurrent.ConcurrentHashMap
 
 private const val TAG = "ThumbnailDownloader"
@@ -20,29 +20,32 @@ class ThumbnailDownloader<in T>(
         private val onThumbnailDownloaded: (T, Bitmap) -> Unit
 ): HandlerThread(TAG) {
 
-    val fragmentLifecycleObserver: LifecycleObserver =
-            object: LifecycleObserver {
-                @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-                fun setup() {
+    val fragmentLifecycleObserver: DefaultLifecycleObserver =
+            object: DefaultLifecycleObserver {
+
+                override fun onCreate(owner: LifecycleOwner) {
+                    super.onCreate(owner)
                     Log.i(TAG, "Starting background thread")
                     start()
                     looper
                 }
 
-                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-                fun tearDown() {
+                override fun onStop(owner: LifecycleOwner) {
+                    super.onStop(owner)
                     Log.i(TAG, "Destroying background thread")
                     quit()
+                    owner.lifecycle.removeObserver(this)
                 }
             }
 
-    val viewLifecycleObserver: LifecycleObserver =
-            object: LifecycleObserver {
-                @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-                fun clearQueue() {
+    val viewLifecycleObserver: DefaultLifecycleObserver =
+            object: DefaultLifecycleObserver {
+                override fun onStop(owner: LifecycleOwner) {
+                    super.onStop(owner)
                     Log.i(TAG, "Clearing all requests from queue")
                     requestHandler.removeMessages(MESSAGE_DOWNLOAD)
                     requestMap.clear()
+                    owner.lifecycle.removeObserver(this)
                 }
             }
 
@@ -67,19 +70,33 @@ class ThumbnailDownloader<in T>(
 
     override fun quit(): Boolean {
         hasQuit = true
+        Log.d(TAG, "quit")
         return super.quit()
     }
 
     fun queueThumbnail(target: T, url: String)  {
-        Log.d(TAG, "Got a URL: $url")
+        //Log.d(TAG, "Got a URL: $url")
         requestMap[target] = url
         requestHandler.obtainMessage(MESSAGE_DOWNLOAD, target)
             .sendToTarget()
     }
 
+    private val cacheSize = Runtime.getRuntime().freeMemory()
+
+    private val imageCache = object: LruCache<String, Bitmap>(cacheSize.toInt()) {
+        override fun sizeOf(key: String?, value: Bitmap?): Int {
+            return value?.byteCount?.div(1024) ?: 0
+        }
+    }
+
     private fun handleRequest(target: T) {
         val url = requestMap[target] ?: return
-        val bitmap = photoFetchr.fetchPhoto(url) ?: return
+
+        val bitmap = if (imageCache.get(url) == null) {
+            photoFetchr.fetchPhoto(url).apply {
+                imageCache.put(url, this)
+            } ?: return
+        } else imageCache.get(url)
 
         responseHandler.post(Runnable {
             if (requestMap[target] != url || hasQuit) {

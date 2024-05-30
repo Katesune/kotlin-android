@@ -2,6 +2,9 @@ package com.bignerdranch.android.photogallery
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+
+private const val TAG = "PhotoGalleryActivity"
 
 class PhotoGalleryActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,6 +19,4 @@ class PhotoGalleryActivity : AppCompatActivity() {
                 .commit()
         }
     }
-
-
 }

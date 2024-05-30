@@ -12,9 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import retrofit2.Call
@@ -35,15 +33,21 @@ class PhotoGalleryFragment: Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        retainInstance = true
         photoGalleryViewModel = ViewModelProviders.of(this).get(PhotoGalleryViewModel::class.java)
 
         val responseHandler = Handler()
+
         thumbnailDownloader = ThumbnailDownloader(responseHandler) { photoHolder, bitmap ->
             val drawable = BitmapDrawable(resources, bitmap)
             photoHolder.bindDrawable(drawable)
         }
+
         lifecycle.addObserver(thumbnailDownloader.fragmentLifecycleObserver)
+
+        viewLifecycleOwnerLiveData.observe(
+                this,
+                { viewLifecycleOwner.lifecycle.addObserver(thumbnailDownloader.viewLifecycleObserver) }
+        )
     }
 
     override fun onCreateView(
@@ -51,9 +55,6 @@ class PhotoGalleryFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        viewLifecycleOwner.lifecycle.addObserver(
-                thumbnailDownloader.viewLifecycleObserver
-        )
         val view = inflater.inflate(R.layout.fragment_photo_gallery, container, false)
 
         photoRecyclerView = view.findViewById(R.id.photo_recycler_view)
@@ -82,20 +83,6 @@ class PhotoGalleryFragment: Fragment() {
         )
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        viewLifecycleOwner.lifecycle.removeObserver(
-                thumbnailDownloader.viewLifecycleObserver
-        )
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        lifecycle.removeObserver(
-            thumbnailDownloader.fragmentLifecycleObserver
-        )
-    }
-
     private class PhotoHolder(private val itemImageView: ImageView): RecyclerView.ViewHolder(itemImageView) {
         val bindDrawable: (Drawable) -> Unit = itemImageView::setImageDrawable
     }
@@ -119,13 +106,25 @@ class PhotoGalleryFragment: Fragment() {
         override fun getItemCount(): Int = galleryItems.size
 
         override fun onBindViewHolder(holder: PhotoHolder, position: Int) {
-            val galleryItem = galleryItems[position]
+
             val placeholder: Drawable = ContextCompat.getDrawable(
                 requireContext(),
                 R.drawable.bill_up_close
             ) ?: ColorDrawable()
             holder.bindDrawable(placeholder)
-            thumbnailDownloader.queueThumbnail(holder, galleryItem.url)
+
+            val rangeByPosition: () -> IntRange = {
+                val leftPos = if (position - 10 < 0) position else position - 10
+                val rightPos = if (position + 10 < itemCount) position + 10 else position
+                leftPos..rightPos
+            }
+
+            for (i in rangeByPosition()) {
+                galleryItems[i].let {
+                    thumbnailDownloader.queueThumbnail(holder, it.url)
+                }
+            }
+
         }
     }
 

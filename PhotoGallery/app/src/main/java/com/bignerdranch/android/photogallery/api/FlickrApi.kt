@@ -8,7 +8,7 @@ import retrofit2.http.Url
 
 interface FlickrApi {
     @GET("services/rest/?method=flickr.interestingness.getList" +
-    "&api_key=#" +
+    "&api_key=37b92c23dda3a570d3f6e1166471957d" +
     "&format=json" +
     "&nojsoncallback=1" +
     "&extras=url_s")
