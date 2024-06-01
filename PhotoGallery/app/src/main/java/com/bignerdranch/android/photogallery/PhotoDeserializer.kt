@@ -1,6 +1,5 @@
 package com.bignerdranch.android.photogallery
 
-import android.util.Log
 import com.bignerdranch.android.photogallery.api.PhotoResponse
 import com.google.gson.*
 import java.lang.reflect.Type
@@ -28,7 +27,8 @@ class PhotoDeserializer: JsonDeserializer<PhotoResponse> {
             GalleryItem(
                     photo.asJsonObject.get("title").asString,
                     photo.asJsonObject.get("id").asString,
-                    photo.asJsonObject.get("url_s").asString
+                    photo.asJsonObject.get("url_s").asString,
+                    photo.asJsonObject.get("owner").asString
             )
         }.filterNot { it.url.isBlank() }
     }

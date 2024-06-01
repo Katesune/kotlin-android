@@ -2,8 +2,6 @@ package com.bignerdranch.android.photogallery
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.hardware.biometrics.BiometricManager
-import android.os.Binder
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -62,6 +60,7 @@ class ThumbnailDownloader<in T>(
                 if (msg.what == MESSAGE_DOWNLOAD) {
                     val target = msg.obj as T
                     Log.i(TAG, "got a request for URL: ${requestMap[target]}")
+
                     handleRequest(target)
                 }
             }
