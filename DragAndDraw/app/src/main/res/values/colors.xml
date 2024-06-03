@@ -8,9 +8,9 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="bright_sun">#fcfcb7</color>
-    <color name="blue_sky">#1e7ac7</color>
-    <color name="sunset_sky">#ec8100</color>
+    <color name="bright_sun">#D22626</color>
+    <color name="blue_sky">#97AAED</color>
+    <color name="sunset_sky">#EC6300</color>
     <color name="night_sky">#05192e</color>
-    <color name="sea">#767BAF</color>
+    <color name="sea">#5E7EEF</color>
 </resources>
