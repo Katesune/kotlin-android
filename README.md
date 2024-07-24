@@ -1,4 +1,4 @@
-Приложения из учебника «Android. Программирование для профессионалов» Big Nerd Ranch 4-е издание, для каждого приложения выполнены дополнительные задания (перечислены в README.md каждого приложения):
+Темы: MVC, MVVM, XML, фрагменты, жизненный цикл фрагмента, навигация по фрагментам, LiveData, Retrofit, GSON, Room, WorkManager, SharedPreferences, Custom View, WebView, BroadcastReceiver
 
 ## CriminalIntent 
 
